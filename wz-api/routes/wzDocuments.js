@@ -6,7 +6,7 @@ const config = require('../config');
 const { nextWzNumber } = require('../services/numbering');
 const { generateWzPdf } = require('../services/pdf');
 const { findClientById } = require('../repositories/clients');
-const { insertWzDocument } = require('../repositories/wzDocuments');
+const { insertWzDocument, listWzDocuments, getWzDocumentById } = require('../repositories/wzDocuments');
 
 const router = express.Router();
 
@@ -56,6 +56,29 @@ router.post('/', requireAuth, async (req, res) => {
     // eslint-disable-next-line no-console
     console.error('Failed to create WZ document', err);
     res.status(500).json({ error: 'Failed to create WZ document' });
+  }
+});
+
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const documents = await listWzDocuments({ clientQuery: req.query.client, number: req.query.number });
+    res.json(documents);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to list WZ documents', err);
+    res.status(500).json({ error: 'Failed to list WZ documents' });
+  }
+});
+
+router.get('/:id/pdf', requireAuth, async (req, res) => {
+  try {
+    const document = await getWzDocumentById(req.params.id);
+    if (!document) return res.status(404).json({ error: 'Document not found' });
+    res.sendFile(path.resolve(document.pdf_path));
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to fetch WZ document PDF', err);
+    res.status(500).json({ error: 'Failed to fetch WZ document PDF' });
   }
 });
 
