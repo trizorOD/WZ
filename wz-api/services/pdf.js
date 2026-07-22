@@ -1,6 +1,8 @@
 const PDFDocument = require('pdfkit');
 const config = require('../config');
 
+const fontPath = require.resolve('dejavu-fonts-ttf/ttf/DejaVuSans.ttf');
+
 function generateWzPdf(data) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
@@ -8,6 +10,8 @@ function generateWzPdf(data) {
     doc.on('data', (chunk) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
+
+    doc.font(fontPath);
 
     doc.fontSize(18).text(`WZ nr ${data.number}`);
     doc.moveDown();

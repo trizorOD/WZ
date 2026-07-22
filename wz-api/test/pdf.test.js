@@ -21,4 +21,24 @@ describe('generateWzPdf', () => {
     expect(parsed.text).toContain('Whisky X');
     expect(parsed.text).toContain('Jan Kowalski');
   });
+
+  it('renders Polish diacritics correctly instead of corrupting them', async () => {
+    const buffer = await generateWzPdf({
+      number: 'WZ/000002/2026',
+      issuedAt: '2026-07-22',
+      dispatchDate: '2026-07-23',
+      client: { name: 'Żabka Łódź Sp. z o.o.', address: 'ul. Świętokrzyska 1, Kraków' },
+      issuedByName: 'Jan Kowalski',
+      note: 'ąęłńóśźż ĄĘŁŃÓŚŹŻ',
+      items: [{ sku: 'WX-1', name: 'Żółta Górka', quantity: 6, unit: 'szt.' }],
+    });
+
+    expect(buffer.slice(0, 4).toString()).toBe('%PDF');
+
+    const parsed = await pdfParse(buffer);
+    expect(parsed.text).toContain('Żabka Łódź Sp. z o.o.');
+    expect(parsed.text).toContain('ul. Świętokrzyska 1, Kraków');
+    expect(parsed.text).toContain('Żółta Górka');
+    expect(parsed.text).toContain('ąęłńóśźż ĄĘŁŃÓŚŹŻ');
+  });
 });
