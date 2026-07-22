@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 const config = require('./config');
 
-const pool = new Pool({ connectionString: config.databaseUrl });
+const pool = new Pool({ connectionString: config.databaseUrl, options: '-c search_path=wz' });
 
 function query(text, params) {
   return pool.query(text, params);
