@@ -1,0 +1,92 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:wz_app/core/api_client.dart';
+import 'package:wz_app/features/clients/client_model.dart';
+import 'package:wz_app/features/clients/clients_repository.dart';
+import 'package:wz_app/features/products/product_model.dart';
+import 'package:wz_app/features/products/products_repository.dart';
+import 'package:wz_app/features/wz_documents/new_wz_screen.dart';
+import 'package:wz_app/features/wz_documents/wz_document_model.dart';
+import 'package:wz_app/features/wz_documents/wz_documents_repository.dart';
+
+class _FakeClientsRepository extends ClientsRepository {
+  _FakeClientsRepository() : super(ApiClient());
+
+  @override
+  Future<Client> lookupNip(String nip) async =>
+      const Client(id: 1, nip: '1133105750', name: 'Wine Avenue', address: 'ul. Szara 10, Warszawa');
+
+  @override
+  Future<List<Client>> search(String query) async => [];
+}
+
+class _FakeProductsRepository extends ProductsRepository {
+  _FakeProductsRepository() : super(ApiClient());
+
+  @override
+  Future<List<Product>> search(String query) async => [
+        const Product(id: 10, name: 'Whisky X', sku: 'WX-1', stockStatus: 'instock', stockQuantity: 42),
+      ];
+}
+
+class _RecordingWzDocumentsRepository extends WzDocumentsRepository {
+  _RecordingWzDocumentsRepository() : super(ApiClient());
+  List<WzDocumentItemInput>? capturedItems;
+
+  @override
+  Future<WzDocumentCreated> create({
+    required int clientId,
+    required String dispatchDate,
+    required String note,
+    required List<WzDocumentItemInput> items,
+  }) async {
+    capturedItems = items;
+    return const WzDocumentCreated(id: 1, number: 'WZ/000001/2026', pdfUrl: '/wz-documents/1/pdf');
+  }
+
+  @override
+  Future<List<WzDocumentSummary>> list({String? client, String? number}) async => [];
+
+  @override
+  Future<List<int>> fetchPdfBytes(int id) async => [];
+}
+
+void main() {
+  testWidgets('completes the client -> products -> review flow and submits', (tester) async {
+    final wzRepository = _RecordingWzDocumentsRepository();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clientsRepositoryProvider.overrideWithValue(_FakeClientsRepository()),
+          productsRepositoryProvider.overrideWithValue(_FakeProductsRepository()),
+          wzDocumentsRepositoryProvider.overrideWithValue(wzRepository),
+        ],
+        child: const MaterialApp(home: NewWzScreen()),
+      ),
+    );
+
+    await tester.enterText(find.byKey(const Key('nip_field')), '1133105750');
+    await tester.tap(find.byKey(const Key('lookup_nip_button')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('product_query_field')), 'whisky');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('product_tile_10')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('quantity_field')), '6');
+    await tester.tap(find.byKey(const Key('confirm_quantity_button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('go_to_review_button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('submit_wz_button')));
+    await tester.pumpAndSettle();
+
+    expect(wzRepository.capturedItems, isNotNull);
+    expect(wzRepository.capturedItems!.single.quantity, 6);
+    expect(wzRepository.capturedItems!.single.sku, 'WX-1');
+  });
+}
