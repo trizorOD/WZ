@@ -1,6 +1,8 @@
 const { Pool } = require('pg');
 const config = require('./config');
 
+// All wz-api tables live in the `wz` schema, not `public` — this project
+// shares its Postgres instance with unrelated data.
 const pool = new Pool({ connectionString: config.databaseUrl, options: '-c search_path=wz' });
 
 function query(text, params) {
