@@ -16,11 +16,15 @@ class PdfResultScreen extends ConsumerStatefulWidget {
 }
 
 class _PdfResultScreenState extends ConsumerState<PdfResultScreen> {
-  late final Future<List<int>> _pdfBytesFuture;
+  late Future<List<int>> _pdfBytesFuture;
 
   @override
   void initState() {
     super.initState();
+    _loadPdf();
+  }
+
+  void _loadPdf() {
     _pdfBytesFuture = ref.read(wzDocumentsRepositoryProvider).fetchPdfBytes(widget.documentId);
   }
 
@@ -31,6 +35,21 @@ class _PdfResultScreenState extends ConsumerState<PdfResultScreen> {
       body: FutureBuilder<List<int>>(
         future: _pdfBytesFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Nie udało się pobrać dokumentu PDF.'),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () => setState(_loadPdf),
+                    child: const Text('Spróbuj ponownie'),
+                  ),
+                ],
+              ),
+            );
+          }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }

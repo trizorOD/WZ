@@ -55,4 +55,26 @@ void main() {
     // rendering PdfPreview, so assert that instead.
     expect(find.byType(PdfPreview), findsOneWidget);
   });
+
+  testWidgets('shows an error message and retry button when the fetch fails', (tester) async {
+    final completer = Completer<List<int>>();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          wzDocumentsRepositoryProvider.overrideWithValue(_DelayedWzDocumentsRepository(completer.future)),
+        ],
+        child: const MaterialApp(home: PdfResultScreen(documentId: 1, number: 'WZ/000001/2026')),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    completer.completeError(Exception('network failure'));
+    await tester.pump();
+
+    expect(find.text('Nie udało się pobrać dokumentu PDF.'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Spróbuj ponownie'), findsOneWidget);
+    expect(find.byType(PdfPreview), findsNothing);
+  });
 }
