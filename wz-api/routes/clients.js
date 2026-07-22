@@ -7,23 +7,33 @@ const router = express.Router();
 
 router.get('/', requireAuth, async (req, res) => {
   const query = req.query.query || '';
-  const clients = await searchClients(query);
-  res.json(clients);
+  try {
+    const clients = await searchClients(query);
+    res.json(clients);
+  } catch (err) {
+    console.error('Client search failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 router.get('/lookup/:nip', requireAuth, async (req, res) => {
   const { nip } = req.params;
-  const existing = await findClientByNip(nip);
-  if (existing && req.query.refresh !== 'true') {
-    return res.json(existing);
-  }
   try {
-    const data = await lookupNip(nip);
-    if (!data) return res.status(404).json({ error: 'NIP not found' });
-    const client = await upsertClient(data);
-    res.json(client);
+    const existing = await findClientByNip(nip);
+    if (existing && req.query.refresh !== 'true') {
+      return res.json(existing);
+    }
+    try {
+      const data = await lookupNip(nip);
+      if (!data) return res.status(404).json({ error: 'NIP not found' });
+      const client = await upsertClient(data);
+      res.json(client);
+    } catch (err) {
+      res.status(502).json({ error: 'MF NIP lookup unavailable' });
+    }
   } catch (err) {
-    res.status(502).json({ error: 'MF NIP lookup unavailable' });
+    console.error('Client NIP lookup failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
