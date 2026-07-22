@@ -10,7 +10,7 @@ class PdfResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('WZ $number')),
-      body: const Center(child: Text('PDF preview coming in Task 8')),
+      body: const Center(child: Text('Generowanie podglądu PDF...')),
     );
   }
 }

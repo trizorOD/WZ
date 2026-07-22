@@ -23,6 +23,15 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
   List<Client> _clientResults = [];
   List<Product> _productResults = [];
   String? _error;
+  bool _isLookingUpNip = false;
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _nipController.dispose();
+    _productQueryController.dispose();
+    super.dispose();
+  }
 
   Future<void> _searchClients(String query) async {
     final results = await ref.read(clientsRepositoryProvider).search(query);
@@ -30,13 +39,19 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
   }
 
   Future<void> _lookupNip() async {
-    setState(() => _error = null);
+    if (_isLookingUpNip) return;
+    setState(() {
+      _error = null;
+      _isLookingUpNip = true;
+    });
     try {
       final client = await ref.read(clientsRepositoryProvider).lookupNip(_nipController.text.trim());
       ref.read(newWzDraftProvider.notifier).setClient(client);
       setState(() => _step = 1);
     } catch (_) {
       setState(() => _error = 'Nie znaleziono NIP. Sprawdz numer lub dodaj klienta recznie.');
+    } finally {
+      if (mounted) setState(() => _isLookingUpNip = false);
     }
   }
 
@@ -59,29 +74,45 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
           unit: 'szt.',
           stockQuantity: product.stockQuantity,
         ));
+    if (product.stockQuantity != null && quantity > product.stockQuantity!) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Uwaga: ilość przekracza dostępny stan magazynowy (${product.stockQuantity})',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _submit() async {
-    final draft = ref.read(newWzDraftProvider);
-    final created = await ref.read(wzDocumentsRepositoryProvider).create(
-          clientId: draft.client!.id,
-          dispatchDate: (draft.dispatchDate ?? DateTime.now()).toIso8601String().substring(0, 10),
-          note: draft.note,
-          items: draft.items
-              .map((i) => WzDocumentItemInput(
-                    productId: i.productId,
-                    name: i.name,
-                    sku: i.sku,
-                    quantity: i.quantity,
-                    unit: i.unit,
-                  ))
-              .toList(),
-        );
-    ref.read(newWzDraftProvider.notifier).reset();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => PdfResultScreen(documentId: created.id, number: created.number)),
-    );
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    try {
+      final draft = ref.read(newWzDraftProvider);
+      final created = await ref.read(wzDocumentsRepositoryProvider).create(
+            clientId: draft.client!.id,
+            dispatchDate: (draft.dispatchDate ?? DateTime.now()).toIso8601String().substring(0, 10),
+            note: draft.note,
+            items: draft.items
+                .map((i) => WzDocumentItemInput(
+                      productId: i.productId,
+                      name: i.name,
+                      sku: i.sku,
+                      quantity: i.quantity,
+                      unit: i.unit,
+                    ))
+                .toList(),
+          );
+      ref.read(newWzDraftProvider.notifier).reset();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => PdfResultScreen(documentId: created.id, number: created.number)),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -110,7 +141,7 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
           ),
           ElevatedButton(
             key: const Key('lookup_nip_button'),
-            onPressed: _lookupNip,
+            onPressed: _isLookingUpNip ? null : _lookupNip,
             child: const Text('Szukaj po NIP'),
           ),
           if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
@@ -207,10 +238,12 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
           const Spacer(),
           ElevatedButton(
             key: const Key('submit_wz_button'),
-            onPressed: () {
-              ref.read(newWzDraftProvider.notifier).setDispatchDate(DateTime.now());
-              _submit();
-            },
+            onPressed: _isSubmitting
+                ? null
+                : () {
+                    ref.read(newWzDraftProvider.notifier).setDispatchDate(DateTime.now());
+                    _submit();
+                  },
             child: const Text('Wystaw WZ'),
           ),
         ],
@@ -229,6 +262,12 @@ class _QuantityDialog extends StatefulWidget {
 
 class _QuantityDialogState extends State<_QuantityDialog> {
   final _controller = TextEditingController(text: '1');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
