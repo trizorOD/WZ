@@ -6,7 +6,17 @@ Backend proxy for the WZ document mobile app.
 
     npm install
     cp .env.example .env   # fill in WooCommerce keys and issuer details
-    docker compose up -d
+
+Get a Postgres database and point `DATABASE_URL` in `.env` at it. Either:
+
+    docker compose up -d          # local Postgres, or
+    # ...point DATABASE_URL at an existing instance instead (e.g. Supabase) —
+    # use the connection pooler host if the direct host doesn't resolve on
+    # your network, and remember the password must be URL-encoded.
+
+Tables are created in their own `wz` schema (not `public`), so this project
+can share a database with unrelated data.
+
     npm run migrate
     node scripts/seedUser.js you@finespirits.pl "a-strong-password" "Your Name"
     npm start
