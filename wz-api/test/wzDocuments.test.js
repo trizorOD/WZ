@@ -59,8 +59,46 @@ describe('POST /wz-documents', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.number).toMatch(/^WZ\/\d{6}\/\d{4}$/);
-    expect(fs.existsSync(config.pdfStorageDir)).toBe(true);
     createdNumbers.push(res.body.number);
+
+    // The document row must actually persist with the submitted fields, not
+    // just produce a 201 response.
+    const docResult = await pool.query('SELECT * FROM wz_documents WHERE id = $1', [res.body.id]);
+    expect(docResult.rows).toHaveLength(1);
+    const savedDoc = docResult.rows[0];
+    expect(savedDoc.number).toBe(res.body.number);
+    expect(savedDoc.client_id).toBe(clientId);
+    // pg returns DATE columns as a local-midnight JS Date, so format with
+    // local getters rather than toISOString() (which would shift by the
+    // runner's UTC offset and flip the day).
+    const savedDispatchDate = new Date(savedDoc.dispatch_date);
+    const formattedDispatchDate = [
+      savedDispatchDate.getFullYear(),
+      String(savedDispatchDate.getMonth() + 1).padStart(2, '0'),
+      String(savedDispatchDate.getDate()).padStart(2, '0'),
+    ].join('-');
+    expect(formattedDispatchDate).toBe('2026-07-23');
+    // insertWzDocument stores an empty note as NULL (`note || null`).
+    expect(savedDoc.note).toBeNull();
+
+    // The line items must persist too, so a bug in insertWzDocument's item
+    // loop would fail this test rather than slipping through.
+    const itemsResult = await pool.query(
+      'SELECT * FROM wz_document_items WHERE wz_document_id = $1',
+      [res.body.id]
+    );
+    expect(itemsResult.rows).toHaveLength(1);
+    const savedItem = itemsResult.rows[0];
+    expect(savedItem.product_id).toBe(10);
+    expect(savedItem.name).toBe('Whisky X');
+    expect(savedItem.sku).toBe('WX-1');
+    expect(Number(savedItem.quantity)).toBe(6);
+    expect(savedItem.unit).toBe('szt.');
+
+    // The specific PDF for this document must exist on disk, built the same
+    // way the route builds it, not just the (persistent) storage directory.
+    const pdfPath = path.join(config.pdfStorageDir, `${res.body.number.replace(/\//g, '-')}.pdf`);
+    expect(fs.existsSync(pdfPath)).toBe(true);
   });
 
   it('rejects a request with no items', async () => {
