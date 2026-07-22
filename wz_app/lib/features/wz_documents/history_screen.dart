@@ -22,6 +22,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Future<void> _load([String query = '']) async {
     final documents = await ref.read(wzDocumentsRepositoryProvider).list(client: query);
+    if (!mounted) return;
     setState(() => _documents = documents);
   }
 
