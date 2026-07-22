@@ -28,13 +28,13 @@ describe('GET /products', () => {
     ]);
 
     expect(axios.get).toHaveBeenCalledWith(
-      'https://finespirits.pl/wp-json/wc/v3/products',
+      `${config.woocommerce.baseUrl}/wp-json/wc/v3/products`,
       {
         params: {
           search: 'whisky',
           per_page: 20,
-          consumer_key: 'ck_xxx',
-          consumer_secret: 'cs_xxx',
+          consumer_key: config.woocommerce.consumerKey,
+          consumer_secret: config.woocommerce.consumerSecret,
         },
       }
     );

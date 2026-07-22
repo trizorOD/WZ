@@ -37,7 +37,10 @@ afterAll(async () => {
   await pool.query('DELETE FROM wz_documents WHERE client_id = $1', [clientId]);
   await pool.query('DELETE FROM clients WHERE id = $1', [clientId]);
   await pool.query('DELETE FROM users WHERE id = $1', [userId]);
-  await pool.query('DELETE FROM wz_number_counters WHERE year = $1', [new Date().getFullYear()]);
+  // Intentionally not deleting the wz_number_counters row for the current
+  // year: it's a shared, monotonic counter that real (non-test) documents
+  // also rely on. Deleting it would reset the sequence and risk a future
+  // insert colliding with an already-issued WZ number.
   for (const number of createdNumbers) {
     const pdfPath = path.join(config.pdfStorageDir, `${number.replace(/\//g, '-')}.pdf`);
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);

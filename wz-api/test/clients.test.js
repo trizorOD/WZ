@@ -13,7 +13,7 @@ function authHeader() {
 }
 
 afterEach(async () => {
-  await pool.query("DELETE FROM clients WHERE nip = '1133105750'");
+  await pool.query("DELETE FROM clients WHERE nip = '7777777777'");
 });
 
 afterAll(async () => {
@@ -23,7 +23,7 @@ afterAll(async () => {
 describe('GET /clients/lookup/:nip', () => {
   it('fetches from the MF API and saves a new client', async () => {
     lookupNip.mockResolvedValueOnce({
-      nip: '1133105750',
+      nip: '7777777777',
       name: 'Example Sp. z o.o.',
       address: 'ul. Testowa 1, 00-001 Warszawa',
       regon: '123456789',
@@ -31,27 +31,27 @@ describe('GET /clients/lookup/:nip', () => {
     });
 
     const res = await request(app)
-      .get('/clients/lookup/1133105750')
+      .get('/clients/lookup/7777777777')
       .set('Authorization', authHeader());
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Example Sp. z o.o.');
-    expect(lookupNip).toHaveBeenCalledWith('1133105750');
+    expect(lookupNip).toHaveBeenCalledWith('7777777777');
   });
 
   it('returns the cached client without calling the MF API again', async () => {
     lookupNip.mockResolvedValueOnce({
-      nip: '1133105750',
+      nip: '7777777777',
       name: 'Example Sp. z o.o.',
       address: 'addr',
       regon: null,
       vatStatus: null,
     });
-    await request(app).get('/clients/lookup/1133105750').set('Authorization', authHeader());
+    await request(app).get('/clients/lookup/7777777777').set('Authorization', authHeader());
 
     lookupNip.mockClear();
     const res = await request(app)
-      .get('/clients/lookup/1133105750')
+      .get('/clients/lookup/7777777777')
       .set('Authorization', authHeader());
 
     expect(res.status).toBe(200);
@@ -61,20 +61,20 @@ describe('GET /clients/lookup/:nip', () => {
   it('bypasses cache and updates client when refresh=true is passed', async () => {
     // Seed a cached client with initial data
     lookupNip.mockResolvedValueOnce({
-      nip: '1133105750',
+      nip: '7777777777',
       name: 'Example Sp. z o.o.',
       address: 'ul. Testowa 1, 00-001 Warszawa',
       regon: '123456789',
       vatStatus: 'Czynny',
     });
     await request(app)
-      .get('/clients/lookup/1133105750')
+      .get('/clients/lookup/7777777777')
       .set('Authorization', authHeader());
 
     // Clear mock and set up fresh data for refresh
     lookupNip.mockClear();
     lookupNip.mockResolvedValueOnce({
-      nip: '1133105750',
+      nip: '7777777777',
       name: 'Updated Sp. z o.o.',
       address: 'ul. Nowa 2, 00-002 Warszawa',
       regon: '987654321',
@@ -83,12 +83,12 @@ describe('GET /clients/lookup/:nip', () => {
 
     // Request with refresh=true
     const res = await request(app)
-      .get('/clients/lookup/1133105750?refresh=true')
+      .get('/clients/lookup/7777777777?refresh=true')
       .set('Authorization', authHeader());
 
     // Verify API was called and fresh data is returned
     expect(res.status).toBe(200);
-    expect(lookupNip).toHaveBeenCalledWith('1133105750');
+    expect(lookupNip).toHaveBeenCalledWith('7777777777');
     expect(res.body.name).toBe('Updated Sp. z o.o.');
     expect(res.body.address).toBe('ul. Nowa 2, 00-002 Warszawa');
   });
