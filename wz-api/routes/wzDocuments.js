@@ -22,6 +22,10 @@ router.post('/', requireAuth, async (req, res) => {
     if (!client) return res.status(404).json({ error: 'Client not found' });
 
     const year = new Date().getFullYear();
+    // If anything below fails after a number is issued here, that number is
+    // intentionally left unused rather than reused/reclaimed. The spec only
+    // requires uniqueness + monotonicity under concurrency, not gapless
+    // contiguity, and a WZ is not a fiscal invoice, so a gap is acceptable.
     const { number, sequence } = await nextWzNumber(year);
     const issuedAt = new Date().toISOString().slice(0, 10);
 

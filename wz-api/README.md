@@ -21,6 +21,10 @@ can share a database with unrelated data.
     node scripts/seedUser.js you@finespirits.pl "a-strong-password" "Your Name"
     npm start
 
+`npm run migrate` is not idempotent (the SQL lacks `IF NOT EXISTS` on the
+table statements), so re-running it against an already-migrated database
+will fail.
+
 ## Manual smoke test
 
     TOKEN=$(curl -s -X POST http://localhost:3001/auth/login \
