@@ -6,6 +6,7 @@ import 'package:wz_app/features/clients/client_model.dart';
 import 'package:wz_app/features/clients/clients_repository.dart';
 import 'package:wz_app/features/products/product_model.dart';
 import 'package:wz_app/features/products/products_repository.dart';
+import 'package:wz_app/features/wz_documents/new_wz_draft.dart';
 import 'package:wz_app/features/wz_documents/new_wz_screen.dart';
 import 'package:wz_app/features/wz_documents/wz_document_model.dart';
 import 'package:wz_app/features/wz_documents/wz_documents_repository.dart';
@@ -98,5 +99,41 @@ void main() {
     expect(wzRepository.capturedItems, isNotNull);
     expect(wzRepository.capturedItems!.single.quantity, 6);
     expect(wzRepository.capturedItems!.single.sku, 'WX-1');
+  });
+
+  testWidgets('resets an abandoned draft when the screen is re-entered', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        clientsRepositoryProvider.overrideWithValue(_FakeClientsRepository()),
+        productsRepositoryProvider.overrideWithValue(_FakeProductsRepository()),
+        wzDocumentsRepositoryProvider.overrideWithValue(_RecordingWzDocumentsRepository()),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    // Simulate an abandoned draft left over from a previous "Nowy WZ" session
+    // (e.g. the user backed out without submitting).
+    container.read(newWzDraftProvider.notifier).addItem(
+          const NewWzDraftItem(
+            productId: 10,
+            name: 'Whisky X',
+            sku: 'WX-1',
+            quantity: 6,
+            unit: 'szt.',
+            stockQuantity: 42,
+          ),
+        );
+    expect(container.read(newWzDraftProvider).items, isNotEmpty);
+
+    // Re-entering the screen (a fresh instance, as navigation would create)
+    // must reset the stale draft as soon as it is created.
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: NewWzScreen()),
+      ),
+    );
+
+    expect(container.read(newWzDraftProvider).items, isEmpty);
   });
 }

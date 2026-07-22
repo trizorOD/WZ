@@ -27,6 +27,23 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
   bool _isSubmitting = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Reset any draft left over from a previous, abandoned "Nowy WZ" session
+    // (e.g. the user backed out without submitting) so it doesn't leak into
+    // this one. The mutation is deferred to a microtask rather than done
+    // synchronously here: Riverpod forbids notifying a provider's listeners
+    // while the widget tree is still building, which this initState runs
+    // inside of (mutating a *changed* draft synchronously here throws
+    // "Tried to modify a provider while the widget tree was building").
+    Future.microtask(() {
+      if (mounted) {
+        ref.read(newWzDraftProvider.notifier).reset();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _nipController.dispose();
     _productQueryController.dispose();
