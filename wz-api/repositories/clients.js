@@ -5,6 +5,11 @@ async function findClientByNip(nip) {
   return result.rows[0] || null;
 }
 
+async function findClientById(id) {
+  const result = await pool.query('SELECT * FROM clients WHERE id = $1', [id]);
+  return result.rows[0] || null;
+}
+
 async function searchClients(query) {
   const result = await pool.query(
     `SELECT * FROM clients WHERE nip ILIKE $1 OR name ILIKE $1 ORDER BY name LIMIT 20`,
@@ -25,4 +30,4 @@ async function upsertClient(data) {
   return result.rows[0];
 }
 
-module.exports = { findClientByNip, searchClients, upsertClient };
+module.exports = { findClientByNip, findClientById, searchClients, upsertClient };
