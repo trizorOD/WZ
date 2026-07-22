@@ -26,6 +26,18 @@ describe('GET /products', () => {
     expect(res.body).toEqual([
       { id: 10, name: 'Whisky X', sku: 'WX-1', stockStatus: 'instock', stockQuantity: 42 },
     ]);
+
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://finespirits.pl/wp-json/wc/v3/products',
+      {
+        params: {
+          search: 'whisky',
+          per_page: 20,
+          consumer_key: 'ck_xxx',
+          consumer_secret: 'cs_xxx',
+        },
+      }
+    );
   });
 
   it('returns 502 when WooCommerce is unreachable', async () => {

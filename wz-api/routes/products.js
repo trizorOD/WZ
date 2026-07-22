@@ -10,6 +10,7 @@ router.get('/', requireAuth, async (req, res) => {
     const products = await searchProducts(search);
     res.json(products);
   } catch (err) {
+    console.error('WooCommerce products search failed:', err);
     res.status(502).json({ error: 'WooCommerce unavailable' });
   }
 });
