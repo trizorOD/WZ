@@ -14,6 +14,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     return Scaffold(
@@ -30,7 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             TextField(
               key: const Key('password_field'),
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Haslo'),
+              decoration: const InputDecoration(labelText: 'Hasło'),
               obscureText: true,
             ),
             const SizedBox(height: 16),
