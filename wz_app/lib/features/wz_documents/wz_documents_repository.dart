@@ -3,8 +3,6 @@ import '../../core/api_client.dart';
 import '../auth/auth_provider.dart';
 import 'wz_document_model.dart';
 
-export 'wz_document_model.dart';
-
 class WzDocumentsRepository {
   WzDocumentsRepository(this._apiClient);
   final ApiClient _apiClient;
