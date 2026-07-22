@@ -58,6 +58,41 @@ describe('GET /clients/lookup/:nip', () => {
     expect(lookupNip).not.toHaveBeenCalled();
   });
 
+  it('bypasses cache and updates client when refresh=true is passed', async () => {
+    // Seed a cached client with initial data
+    lookupNip.mockResolvedValueOnce({
+      nip: '1133105750',
+      name: 'Example Sp. z o.o.',
+      address: 'ul. Testowa 1, 00-001 Warszawa',
+      regon: '123456789',
+      vatStatus: 'Czynny',
+    });
+    await request(app)
+      .get('/clients/lookup/1133105750')
+      .set('Authorization', authHeader());
+
+    // Clear mock and set up fresh data for refresh
+    lookupNip.mockClear();
+    lookupNip.mockResolvedValueOnce({
+      nip: '1133105750',
+      name: 'Updated Sp. z o.o.',
+      address: 'ul. Nowa 2, 00-002 Warszawa',
+      regon: '987654321',
+      vatStatus: 'Zawieszony',
+    });
+
+    // Request with refresh=true
+    const res = await request(app)
+      .get('/clients/lookup/1133105750?refresh=true')
+      .set('Authorization', authHeader());
+
+    // Verify API was called and fresh data is returned
+    expect(res.status).toBe(200);
+    expect(lookupNip).toHaveBeenCalledWith('1133105750');
+    expect(res.body.name).toBe('Updated Sp. z o.o.');
+    expect(res.body.address).toBe('ul. Nowa 2, 00-002 Warszawa');
+  });
+
   it('returns 404 when the MF API has no match', async () => {
     lookupNip.mockResolvedValueOnce(null);
     const res = await request(app)
