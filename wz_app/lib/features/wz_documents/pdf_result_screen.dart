@@ -5,20 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import 'wz_documents_repository.dart';
 
-class PdfResultScreen extends ConsumerWidget {
+class PdfResultScreen extends ConsumerStatefulWidget {
   const PdfResultScreen({super.key, required this.documentId, required this.number});
 
   final int documentId;
   final String number;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final repository = ref.watch(wzDocumentsRepositoryProvider);
+  ConsumerState<PdfResultScreen> createState() => _PdfResultScreenState();
+}
 
+class _PdfResultScreenState extends ConsumerState<PdfResultScreen> {
+  late final Future<List<int>> _pdfBytesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _pdfBytesFuture = ref.read(wzDocumentsRepositoryProvider).fetchPdfBytes(widget.documentId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('WZ $number')),
+      appBar: AppBar(title: Text('WZ ${widget.number}')),
       body: FutureBuilder<List<int>>(
-        future: repository.fetchPdfBytes(documentId),
+        future: _pdfBytesFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
