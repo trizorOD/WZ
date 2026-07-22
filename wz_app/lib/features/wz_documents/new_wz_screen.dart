@@ -66,7 +66,7 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
       ref.read(newWzDraftProvider.notifier).setClient(client);
       setState(() => _step = 1);
     } catch (_) {
-      setState(() => _error = 'Nie znaleziono NIP. Sprawdz numer lub dodaj klienta recznie.');
+      setState(() => _error = 'Nie znaleziono NIP. Sprawdź numer lub dodaj klienta ręcznie.');
     } finally {
       if (mounted) setState(() => _isLookingUpNip = false);
     }
@@ -294,7 +294,7 @@ class _QuantityDialogState extends State<_QuantityDialog> {
         key: const Key('quantity_field'),
         controller: _controller,
         keyboardType: TextInputType.number,
-        decoration: const InputDecoration(labelText: 'Ilosc (szt.)'),
+        decoration: const InputDecoration(labelText: 'Ilość (szt.)'),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Anuluj')),
