@@ -83,7 +83,17 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('submit_wz_button')));
-    await tester.pumpAndSettle();
+    // Submitting navigates (pushReplacement) into PdfResultScreen, which now
+    // renders a real PdfPreview (package:printing). PdfPreview runs its own
+    // platform-channel rasterization and animates its own loading indicator
+    // indefinitely inside the flutter_test sandbox (no platform channel mock
+    // exists for it), so it never "settles" — pumpAndSettle would hang/time
+    // out here. This test only needs to observe that submit triggered the
+    // repository call with the right payload, which happens synchronously
+    // inside the fake repository before navigation; a couple of bounded
+    // pumps is enough to drive that through without waiting on PdfPreview.
+    await tester.pump();
+    await tester.pump();
 
     expect(wzRepository.capturedItems, isNotNull);
     expect(wzRepository.capturedItems!.single.quantity, 6);
