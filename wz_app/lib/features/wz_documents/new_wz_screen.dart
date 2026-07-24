@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../clients/client_model.dart';
 import '../clients/clients_repository.dart';
@@ -155,6 +156,8 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
             key: const Key('nip_field'),
             controller: _nipController,
             decoration: const InputDecoration(labelText: 'NIP klienta'),
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           ElevatedButton(
             key: const Key('lookup_nip_button'),

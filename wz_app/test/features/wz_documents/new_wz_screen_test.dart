@@ -136,4 +136,21 @@ void main() {
 
     expect(container.read(newWzDraftProvider).items, isEmpty);
   });
+
+  testWidgets('nip_field strips non-digit characters as they are typed', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clientsRepositoryProvider.overrideWithValue(_FakeClientsRepository()),
+          productsRepositoryProvider.overrideWithValue(_FakeProductsRepository()),
+          wzDocumentsRepositoryProvider.overrideWithValue(_RecordingWzDocumentsRepository()),
+        ],
+        child: const MaterialApp(home: NewWzScreen()),
+      ),
+    );
+
+    await tester.enterText(find.byKey(const Key('nip_field')), '11-33 10a5750');
+
+    expect(find.text('1133105750'), findsOneWidget);
+  });
 }
