@@ -9,7 +9,6 @@ const {
   setUserActive,
   updateUserPassword,
 } = require('../repositories/users');
-const { pool } = require('../db');
 
 const router = express.Router();
 
@@ -30,13 +29,16 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
   }
 
   try {
-    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'A user with this email already exists' });
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await insertUser({ email, passwordHash, fullName, role: role || 'user' });
+    let user;
+    try {
+      user = await insertUser({ email, passwordHash, fullName, role: role || 'user' });
+    } catch (err) {
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'A user with this email already exists' });
+      }
+      throw err;
+    }
     res.status(201).json(user);
   } catch (err) {
     console.error('Failed to create user:', err);
