@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>WZ Admin</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="login-view">
+    <h1>WZ Admin</h1>
+    <form id="login-form">
+      <label>Email <input type="email" id="login-email" required /></label>
+      <label>Password <input type="password" id="login-password" required /></label>
+      <button type="submit">Log in</button>
+      <p id="login-error" class="error"></p>
+    </form>
+  </div>
+
+  <div id="panel-view" hidden>
+    <header>
+      <h1>WZ Admin</h1>
+      <nav>
+        <button data-tab="users" class="tab-button active">Users</button>
+        <button data-tab="history" class="tab-button">WZ History</button>
+      </nav>
+    </header>
+
+    <section id="tab-users" class="tab-panel">
+      <h2>Add user</h2>
+      <form id="add-user-form">
+        <label>Email <input type="email" id="new-user-email" required /></label>
+        <label>Password <input type="password" id="new-user-password" required /></label>
+        <label>Full name <input type="text" id="new-user-fullname" required /></label>
+        <label>Role
+          <select id="new-user-role">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+        <button type="submit">Add user</button>
+        <p id="add-user-error" class="error"></p>
+      </form>
+
+      <h2>Users</h2>
+      <table id="users-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Full name</th>
+            <th>Role</th>
+            <th>Active</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-history" class="tab-panel" hidden>
+      <h2>WZ document history</h2>
+      <form id="history-search-form">
+        <label>Client <input type="text" id="history-client" /></label>
+        <label>Number <input type="text" id="history-number" /></label>
+        <button type="submit">Search</button>
+      </form>
+      <table id="history-table">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Client</th>
+            <th>Dispatch date</th>
+            <th>PDF</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

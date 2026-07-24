@@ -19,8 +19,10 @@ router.post('/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
+    if (!user.is_active) return res.status(401).json({ error: 'Invalid credentials' });
+
     const token = jwt.sign(
-      { userId: user.id, email: user.email, fullName: user.full_name },
+      { userId: user.id, email: user.email, fullName: user.full_name, role: user.role },
       config.jwtSecret,
       { expiresIn: '12h' }
     );
