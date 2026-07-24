@@ -21,9 +21,11 @@ can share a database with unrelated data.
     node scripts/seedUser.js you@finespirits.pl "a-strong-password" "Your Name"
     npm start
 
-`npm run migrate` is not idempotent (the SQL lacks `IF NOT EXISTS` on the
-table statements), so re-running it against an already-migrated database
-will fail.
+`node scripts/migrate.js [fileName]` is not idempotent (the SQL lacks
+`IF NOT EXISTS` on table/column statements) — re-running the same file
+against an already-migrated database will fail. It defaults to
+`001_init.sql` when no filename is given; pass a filename explicitly to
+apply a later migration (e.g. `node scripts/migrate.js 002_admin_panel.sql`).
 
 ## Manual smoke test
 
@@ -36,6 +38,21 @@ will fail.
 
     curl -s http://localhost:3001/clients/lookup/1133105750 \
       -H "Authorization: Bearer $TOKEN"
+
+## Admin panel
+
+A small admin-only web page is served at `/admin/index.html` once the server
+is running. It requires an account with `role = 'admin'` and lets you
+create/deactivate/reactivate users, change passwords, and browse WZ document
+history.
+
+Apply the admin-panel migration once (adds `role`/`is_active` to `users`):
+
+    node scripts/migrate.js 002_admin_panel.sql
+
+Bootstrap the first admin account:
+
+    node scripts/seedUser.js you@finespirits.pl "a-strong-password" "Your Name" --admin
 
 ## Tests
 
