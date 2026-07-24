@@ -1,8 +1,10 @@
+// wz-api/app.js
 const express = require('express');
 const authRouter = require('./routes/auth');
 const productsRouter = require('./routes/products');
 const clientsRouter = require('./routes/clients');
 const wzDocumentsRouter = require('./routes/wzDocuments');
+const adminUsersRouter = require('./routes/adminUsers');
 
 const app = express();
 app.use(express.json());
@@ -13,6 +15,7 @@ app.use('/auth', authRouter);
 app.use('/products', productsRouter);
 app.use('/clients', clientsRouter);
 app.use('/wz-documents', wzDocumentsRouter);
+app.use('/admin/users', adminUsersRouter);
 
 // Safety net: Express 4 does not forward a rejected promise from an async
 // handler to this error middleware automatically, so every route also wraps
