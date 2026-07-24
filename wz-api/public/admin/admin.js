@@ -74,17 +74,39 @@ async function loadUsers() {
     const toggleLabel = user.is_active ? 'Deactivate' : 'Reactivate';
     const toggleAction = user.is_active ? 'deactivate' : 'reactivate';
 
-    tr.innerHTML = `
-      <td>${user.email}</td>
-      <td>${user.full_name}</td>
-      <td>${user.role}</td>
-      <td>${user.is_active ? 'yes' : 'no'}</td>
-      <td>${new Date(user.created_at).toLocaleDateString()}</td>
-      <td>
-        <button data-action="${toggleAction}" data-id="${user.id}">${toggleLabel}</button>
-        <button data-action="password" data-id="${user.id}">Change password</button>
-      </td>
-    `;
+    const emailTd = document.createElement('td');
+    emailTd.textContent = user.email;
+
+    const fullNameTd = document.createElement('td');
+    fullNameTd.textContent = user.full_name;
+
+    const roleTd = document.createElement('td');
+    roleTd.textContent = user.role;
+
+    const activeTd = document.createElement('td');
+    activeTd.textContent = user.is_active ? 'yes' : 'no';
+
+    const createdTd = document.createElement('td');
+    createdTd.textContent = new Date(user.created_at).toLocaleDateString();
+
+    const actionsTd = document.createElement('td');
+    const toggleButton = document.createElement('button');
+    toggleButton.dataset.action = toggleAction;
+    toggleButton.dataset.id = user.id;
+    toggleButton.textContent = toggleLabel;
+    const passwordButton = document.createElement('button');
+    passwordButton.dataset.action = 'password';
+    passwordButton.dataset.id = user.id;
+    passwordButton.textContent = 'Change password';
+    actionsTd.appendChild(toggleButton);
+    actionsTd.appendChild(passwordButton);
+
+    tr.appendChild(emailTd);
+    tr.appendChild(fullNameTd);
+    tr.appendChild(roleTd);
+    tr.appendChild(activeTd);
+    tr.appendChild(createdTd);
+    tr.appendChild(actionsTd);
     tbody.appendChild(tr);
   }
 }
@@ -141,12 +163,26 @@ async function loadHistory(params = {}) {
   tbody.innerHTML = '';
   for (const doc of documents) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${doc.number}</td>
-      <td>${doc.client_name}</td>
-      <td>${doc.dispatch_date}</td>
-      <td><button data-pdf-id="${doc.id}">View PDF</button></td>
-    `;
+
+    const numberTd = document.createElement('td');
+    numberTd.textContent = doc.number;
+
+    const clientTd = document.createElement('td');
+    clientTd.textContent = doc.client_name;
+
+    const dateTd = document.createElement('td');
+    dateTd.textContent = doc.dispatch_date;
+
+    const pdfTd = document.createElement('td');
+    const pdfButton = document.createElement('button');
+    pdfButton.dataset.pdfId = doc.id;
+    pdfButton.textContent = 'View PDF';
+    pdfTd.appendChild(pdfButton);
+
+    tr.appendChild(numberTd);
+    tr.appendChild(clientTd);
+    tr.appendChild(dateTd);
+    tr.appendChild(pdfTd);
     tbody.appendChild(tr);
   }
 }

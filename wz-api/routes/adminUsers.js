@@ -12,7 +12,9 @@ const {
 
 const router = express.Router();
 
-router.get('/', requireAuth, requireAdmin, async (_req, res) => {
+router.use(requireAuth, requireAdmin);
+
+router.get('/', async (_req, res) => {
   try {
     const users = await listUsers();
     res.json(users);
@@ -22,7 +24,7 @@ router.get('/', requireAuth, requireAdmin, async (_req, res) => {
   }
 });
 
-router.post('/', requireAuth, requireAdmin, async (req, res) => {
+router.post('/', async (req, res) => {
   const { email, password, fullName, role } = req.body;
   if (!email || !password || !fullName) {
     return res.status(400).json({ error: 'email, password and fullName are required' });
@@ -46,7 +48,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-router.patch('/:id/deactivate', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/:id/deactivate', async (req, res) => {
   try {
     const user = await setUserActive(req.params.id, false);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -57,7 +59,7 @@ router.patch('/:id/deactivate', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-router.patch('/:id/reactivate', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/:id/reactivate', async (req, res) => {
   try {
     const user = await setUserActive(req.params.id, true);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -68,7 +70,7 @@ router.patch('/:id/reactivate', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-router.patch('/:id/password', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/:id/password', async (req, res) => {
   const { newPassword } = req.body;
   if (!newPassword) {
     return res.status(400).json({ error: 'newPassword is required' });
