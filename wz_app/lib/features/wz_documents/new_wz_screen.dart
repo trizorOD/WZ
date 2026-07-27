@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/api_client.dart';
 import '../clients/client_model.dart';
 import '../clients/clients_repository.dart';
 import '../products/product_model.dart';
@@ -66,8 +67,15 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
       final client = await ref.read(clientsRepositoryProvider).lookupNip(_nipController.text.trim());
       ref.read(newWzDraftProvider.notifier).setClient(client);
       setState(() => _step = 1);
-    } catch (_) {
-      setState(() => _error = 'Nie znaleziono NIP. Sprawdź numer lub dodaj klienta ręcznie.');
+    } on ApiException catch (e) {
+      setState(() => _error = switch (e.statusCode) {
+            404 => 'Nie znaleziono NIP. Sprawdź numer lub dodaj klienta ręcznie.',
+            401 => 'Sesja wygasła. Zaloguj się ponownie.',
+            502 => 'Rejestr Ministerstwa Finansów jest chwilowo niedostępny. Spróbuj ponownie za chwilę.',
+            _ => 'Błąd (${e.statusCode}): ${e.message}',
+          });
+    } catch (e) {
+      setState(() => _error = 'Brak połączenia z serwerem: $e');
     } finally {
       if (mounted) setState(() => _isLookingUpNip = false);
     }
