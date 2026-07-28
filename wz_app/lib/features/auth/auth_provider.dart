@@ -39,6 +39,8 @@ class AuthController extends StateNotifier<AuthState> {
       state = const AuthState(AuthStatus.authenticated);
     } on ApiException catch (e) {
       state = AuthState(AuthStatus.unauthenticated, error: e.message);
+    } catch (e) {
+      state = AuthState(AuthStatus.unauthenticated, error: 'Brak połączenia z serwerem: $e');
     }
   }
 

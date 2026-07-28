@@ -213,6 +213,7 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
             onChanged: _searchProducts,
           ),
           Expanded(
+            flex: 3,
             child: ListView.builder(
               itemCount: _productResults.length,
               itemBuilder: (context, index) {
@@ -228,14 +229,23 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
           ),
           const Divider(),
           Text('Wybrane pozycje (${draft.items.length})'),
-          ...draft.items.map((item) => ListTile(
-                title: Text(item.name),
-                subtitle: Text('${item.quantity} ${item.unit}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => ref.read(newWzDraftProvider.notifier).removeItem(item.productId, item.unit),
-                ),
-              )),
+          Expanded(
+            flex: 2,
+            child: ListView.builder(
+              itemCount: draft.items.length,
+              itemBuilder: (context, index) {
+                final item = draft.items[index];
+                return ListTile(
+                  title: Text(item.name),
+                  subtitle: Text('${item.quantity} ${item.unit}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => ref.read(newWzDraftProvider.notifier).removeItem(item.productId, item.unit),
+                  ),
+                );
+              },
+            ),
+          ),
           ElevatedButton(
             key: const Key('go_to_review_button'),
             onPressed: draft.items.isEmpty ? null : () => setState(() => _step = 2),
