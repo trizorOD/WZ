@@ -20,6 +20,43 @@ afterAll(async () => {
   await pool.end();
 });
 
+describe('POST /clients', () => {
+  it('creates a client manually without calling the MF API', async () => {
+    const res = await request(app)
+      .post('/clients')
+      .set('Authorization', authHeader())
+      .send({ nip: '7777777777', name: 'Manual Sp. z o.o.', address: 'ul. Ręczna 5, Warszawa', regon: '111222333' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('Manual Sp. z o.o.');
+    expect(res.body.regon).toBe('111222333');
+    expect(lookupNip).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when required fields are missing', async () => {
+    const res = await request(app)
+      .post('/clients')
+      .set('Authorization', authHeader())
+      .send({ nip: '7777777777', name: 'Manual Sp. z o.o.' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 409 when a client with the NIP already exists', async () => {
+    await request(app)
+      .post('/clients')
+      .set('Authorization', authHeader())
+      .send({ nip: '7777777777', name: 'Manual Sp. z o.o.', address: 'ul. Ręczna 5, Warszawa' });
+
+    const res = await request(app)
+      .post('/clients')
+      .set('Authorization', authHeader())
+      .send({ nip: '7777777777', name: 'Duplicate Sp. z o.o.', address: 'ul. Inna 1, Warszawa' });
+
+    expect(res.status).toBe(409);
+  });
+});
+
 describe('GET /clients/lookup/:nip', () => {
   it('fetches from the MF API and saves a new client', async () => {
     lookupNip.mockResolvedValueOnce({

@@ -18,6 +18,21 @@ class ClientsRepository {
     final response = await _apiClient.get('/clients/lookup/$nip');
     return Client.fromJson(response as Map<String, dynamic>);
   }
+
+  Future<Client> createManual({
+    required String nip,
+    required String name,
+    required String address,
+    String? regon,
+  }) async {
+    final response = await _apiClient.post('/clients', {
+      'nip': nip,
+      'name': name,
+      'address': address,
+      if (regon != null && regon.isNotEmpty) 'regon': regon,
+    });
+    return Client.fromJson(response as Map<String, dynamic>);
+  }
 }
 
 final clientsRepositoryProvider = Provider<ClientsRepository>(

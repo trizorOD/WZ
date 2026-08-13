@@ -1,7 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { lookupNip } = require('../services/nipLookup');
-const { findClientByNip, searchClients, upsertClient } = require('../repositories/clients');
+const { findClientByNip, searchClients, insertClient, upsertClient } = require('../repositories/clients');
 
 const router = express.Router();
 
@@ -12,6 +12,28 @@ router.get('/', requireAuth, async (req, res) => {
     res.json(clients);
   } catch (err) {
     console.error('Client search failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/', requireAuth, async (req, res) => {
+  const { nip, name, address, regon } = req.body;
+  if (!nip || !name || !address) {
+    return res.status(400).json({ error: 'nip, name and address are required' });
+  }
+  try {
+    let client;
+    try {
+      client = await insertClient({ nip, name, address, regon });
+    } catch (err) {
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'Client with this NIP already exists' });
+      }
+      throw err;
+    }
+    res.status(201).json(client);
+  } catch (err) {
+    console.error('Manual client creation failed:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

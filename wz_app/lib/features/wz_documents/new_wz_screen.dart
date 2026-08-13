@@ -81,6 +81,16 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
     }
   }
 
+  Future<void> _addClientManually() async {
+    final client = await showDialog<Client>(
+      context: context,
+      builder: (context) => const _ManualClientDialog(),
+    );
+    if (client == null) return;
+    ref.read(newWzDraftProvider.notifier).setClient(client);
+    setState(() => _step = 1);
+  }
+
   Future<void> _searchProducts(String query) async {
     final results = await ref.read(productsRepositoryProvider).search(query);
     setState(() => _productResults = results);
@@ -173,6 +183,12 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
             child: const Text('Szukaj po NIP'),
           ),
           if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            key: const Key('add_client_manually_button'),
+            onPressed: _addClientManually,
+            child: const Text('Dodaj klienta ręcznie'),
+          ),
           const SizedBox(height: 16),
           TextField(
             key: const Key('client_search_field'),
@@ -286,6 +302,117 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ManualClientDialog extends ConsumerStatefulWidget {
+  const _ManualClientDialog();
+
+  @override
+  ConsumerState<_ManualClientDialog> createState() => _ManualClientDialogState();
+}
+
+class _ManualClientDialogState extends ConsumerState<_ManualClientDialog> {
+  final _nipController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _regonController = TextEditingController();
+  String? _error;
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _nipController.dispose();
+    _nameController.dispose();
+    _addressController.dispose();
+    _regonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    final nip = _nipController.text.trim();
+    final name = _nameController.text.trim();
+    final address = _addressController.text.trim();
+    if (nip.isEmpty || name.isEmpty || address.isEmpty) {
+      setState(() => _error = 'NIP, nazwa i adres są wymagane.');
+      return;
+    }
+    setState(() {
+      _error = null;
+      _isSubmitting = true;
+    });
+    try {
+      final client = await ref.read(clientsRepositoryProvider).createManual(
+            nip: nip,
+            name: name,
+            address: address,
+            regon: _regonController.text.trim(),
+          );
+      if (mounted) Navigator.of(context).pop(client);
+    } on ApiException catch (e) {
+      setState(() => _error = switch (e.statusCode) {
+            409 => 'Klient z tym numerem NIP już istnieje.',
+            401 => 'Sesja wygasła. Zaloguj się ponownie.',
+            _ => 'Błąd (${e.statusCode}): ${e.message}',
+          });
+    } catch (e) {
+      setState(() => _error = 'Brak połączenia z serwerem: $e');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Dodaj klienta ręcznie'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: const Key('manual_nip_field'),
+              controller: _nipController,
+              decoration: const InputDecoration(labelText: 'NIP'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            TextField(
+              key: const Key('manual_name_field'),
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Nazwa'),
+            ),
+            TextField(
+              key: const Key('manual_address_field'),
+              controller: _addressController,
+              decoration: const InputDecoration(labelText: 'Adres'),
+            ),
+            TextField(
+              key: const Key('manual_regon_field'),
+              controller: _regonController,
+              decoration: const InputDecoration(labelText: 'REGON (opcjonalnie)'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Anuluj')),
+        TextButton(
+          key: const Key('confirm_manual_client_button'),
+          onPressed: _isSubmitting ? null : _submit,
+          child: const Text('Dodaj'),
+        ),
+      ],
     );
   }
 }

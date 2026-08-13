@@ -20,6 +20,15 @@ class _FakeClientsRepository extends ClientsRepository {
 
   @override
   Future<List<Client>> search(String query) async => [];
+
+  @override
+  Future<Client> createManual({
+    required String nip,
+    required String name,
+    required String address,
+    String? regon,
+  }) async =>
+      Client(id: 2, nip: nip, name: name, address: address);
 }
 
 class _FakeProductsRepository extends ProductsRepository {
@@ -135,6 +144,36 @@ void main() {
     );
 
     expect(container.read(newWzDraftProvider).items, isEmpty);
+  });
+
+  testWidgets('adding a client manually moves to the products step with that client', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        clientsRepositoryProvider.overrideWithValue(_FakeClientsRepository()),
+        productsRepositoryProvider.overrideWithValue(_FakeProductsRepository()),
+        wzDocumentsRepositoryProvider.overrideWithValue(_RecordingWzDocumentsRepository()),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: NewWzScreen()),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('add_client_manually_button')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('manual_nip_field')), '5253079419');
+    await tester.enterText(find.byKey(const Key('manual_name_field')), 'Manual Sp. z o.o.');
+    await tester.enterText(find.byKey(const Key('manual_address_field')), 'ul. Ręczna 5, Warszawa');
+    await tester.tap(find.byKey(const Key('confirm_manual_client_button')));
+    await tester.pumpAndSettle();
+
+    expect(container.read(newWzDraftProvider).client?.name, 'Manual Sp. z o.o.');
+    expect(find.byKey(const Key('product_query_field')), findsOneWidget);
   });
 
   testWidgets('nip_field strips non-digit characters as they are typed', (tester) async {

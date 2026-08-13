@@ -53,5 +53,54 @@ void main() {
 
       await expectLater(() => repository.lookupNip('0000000000'), throwsA(isA<ApiException>()));
     });
+
+    test('createManual posts the form fields and maps the JSON object to a Client', () async {
+      final repository = ClientsRepository(ApiClient(
+        httpClient: MockClient((request) async {
+          expect(request.url.path, '/clients');
+          expect(request.method, 'POST');
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(body, {
+            'nip': '5253079419',
+            'name': 'Manual Sp. z o.o.',
+            'address': 'ul. Ręczna 5, Warszawa',
+            'regon': '111222333',
+          });
+          return http.Response(
+            jsonEncode({
+              'id': 2,
+              'nip': '5253079419',
+              'name': 'Manual Sp. z o.o.',
+              'address': 'ul. Ręczna 5, Warszawa',
+            }),
+            201,
+          );
+        }),
+        tokenStorage: FakeTokenStorage('token'),
+      ));
+
+      final result = await repository.createManual(
+        nip: '5253079419',
+        name: 'Manual Sp. z o.o.',
+        address: 'ul. Ręczna 5, Warszawa',
+        regon: '111222333',
+      );
+
+      expect(result.name, 'Manual Sp. z o.o.');
+    });
+
+    test('createManual throws ApiException on a 409 duplicate NIP', () async {
+      final repository = ClientsRepository(ApiClient(
+        httpClient: MockClient(
+          (request) async => http.Response(jsonEncode({'error': 'Client with this NIP already exists'}), 409),
+        ),
+        tokenStorage: FakeTokenStorage('token'),
+      ));
+
+      await expectLater(
+        () => repository.createManual(nip: '5253079419', name: 'X', address: 'Y'),
+        throwsA(isA<ApiException>()),
+      );
+    });
   });
 }

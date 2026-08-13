@@ -18,6 +18,16 @@ async function searchClients(query) {
   return result.rows;
 }
 
+async function insertClient(data) {
+  const result = await pool.query(
+    `INSERT INTO clients (nip, name, address, regon, last_refreshed_at)
+     VALUES ($1, $2, $3, $4, now())
+     RETURNING *`,
+    [data.nip, data.name, data.address, data.regon || null]
+  );
+  return result.rows[0];
+}
+
 async function upsertClient(data) {
   const result = await pool.query(
     `INSERT INTO clients (nip, name, address, regon, vat_status, last_refreshed_at)
@@ -30,4 +40,4 @@ async function upsertClient(data) {
   return result.rows[0];
 }
 
-module.exports = { findClientByNip, findClientById, searchClients, upsertClient };
+module.exports = { findClientByNip, findClientById, searchClients, insertClient, upsertClient };
