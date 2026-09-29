@@ -216,6 +216,11 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
     );
   }
 
+  String _formatStock(Product product) {
+    if (product.stocks.isEmpty) return '${product.stockQuantity ?? '-'}';
+    return product.stocks.map((s) => '${s.name} ${s.quantity}').join(' / ');
+  }
+
   Widget _buildProductsStep(NewWzDraft draft) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -225,7 +230,7 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
           TextField(
             key: const Key('product_query_field'),
             controller: _productQueryController,
-            decoration: const InputDecoration(labelText: 'Szukaj towaru (nazwa lub SKU)'),
+            decoration: const InputDecoration(labelText: 'Szukaj towaru (nazwa)'),
             onChanged: _searchProducts,
           ),
           Expanded(
@@ -237,7 +242,7 @@ class _NewWzScreenState extends ConsumerState<NewWzScreen> {
                 return ListTile(
                   key: Key('product_tile_${product.id}'),
                   title: Text(product.name),
-                  subtitle: Text('SKU: ${product.sku} - stan: ${product.stockQuantity ?? '-'}'),
+                  subtitle: Text('SKU: ${product.sku} · stan: ${_formatStock(product)}'),
                   onTap: () => _addProductToCart(product),
                 );
               },

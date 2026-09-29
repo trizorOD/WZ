@@ -1,6 +1,6 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
-const { searchProducts } = require('../services/woocommerce');
+const { searchProducts } = require('../services/baselinker');
 
 const router = express.Router();
 
@@ -10,8 +10,8 @@ router.get('/', requireAuth, async (req, res) => {
     const products = await searchProducts(search);
     res.json(products);
   } catch (err) {
-    console.error('WooCommerce products search failed:', err);
-    res.status(502).json({ error: 'WooCommerce unavailable' });
+    console.error('BaseLinker products search failed:', err);
+    res.status(502).json({ error: 'BaseLinker unavailable' });
   }
 });
 

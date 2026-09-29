@@ -36,7 +36,16 @@ class _FakeProductsRepository extends ProductsRepository {
 
   @override
   Future<List<Product>> search(String query) async => [
-        const Product(id: 10, name: 'Whisky X', sku: 'WX-1', stockStatus: 'instock', stockQuantity: 42),
+        const Product(
+          id: 10,
+          name: 'Whisky X',
+          sku: 'WX-1',
+          stockQuantity: 42,
+          stocks: [
+            WarehouseStock(warehouseId: 'bl_48933', name: 'Default', quantity: 40),
+            WarehouseStock(warehouseId: 'bl_52045', name: 'Annopol', quantity: 2),
+          ],
+        ),
       ];
 }
 
@@ -83,6 +92,7 @@ void main() {
 
     await tester.enterText(find.byKey(const Key('product_query_field')), 'whisky');
     await tester.pumpAndSettle();
+    expect(find.text('SKU: WX-1 · stan: Default 40 / Annopol 2'), findsOneWidget);
     await tester.tap(find.byKey(const Key('product_tile_10')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('quantity_field')), '6');

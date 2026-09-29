@@ -14,7 +14,16 @@ void main() {
         expect(request.url.queryParameters['search'], 'whisky');
         return http.Response(
           jsonEncode([
-            {'id': 10, 'name': 'Whisky X', 'sku': 'WX-1', 'stockStatus': 'instock', 'stockQuantity': 42},
+            {
+              'id': 10,
+              'name': 'Whisky X',
+              'sku': 'WX-1',
+              'stockQuantity': 42,
+              'stocks': [
+                {'warehouseId': 'bl_48933', 'name': 'Default', 'quantity': 40},
+                {'warehouseId': 'bl_52045', 'name': 'Annopol', 'quantity': 2},
+              ],
+            },
           ]),
           200,
         );
@@ -26,5 +35,7 @@ void main() {
 
     expect(result.single.name, 'Whisky X');
     expect(result.single.stockQuantity, 42);
+    expect(result.single.stocks.map((s) => s.name), ['Default', 'Annopol']);
+    expect(result.single.stocks.map((s) => s.quantity), [40, 2]);
   });
 }

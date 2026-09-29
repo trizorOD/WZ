@@ -5,7 +5,7 @@ Backend proxy for the WZ document mobile app.
 ## Setup
 
     npm install
-    cp .env.example .env   # fill in WooCommerce keys and issuer details
+    cp .env.example .env   # fill in BaseLinker token and issuer details
 
 Get a Postgres database and point `DATABASE_URL` in `.env` at it. Either:
 

@@ -4,10 +4,9 @@ module.exports = {
   port: parseInt(process.env.PORT || '3001', 10),
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
-  woocommerce: {
-    baseUrl: process.env.WOOCOMMERCE_BASE_URL,
-    consumerKey: process.env.WOOCOMMERCE_CONSUMER_KEY,
-    consumerSecret: process.env.WOOCOMMERCE_CONSUMER_SECRET,
+  baselinker: {
+    token: process.env.BL_TOKEN,
+    inventoryId: parseInt(process.env.BL_INVENTORY_ID || '0', 10),
   },
   mfNip: {
     baseUrl: process.env.MF_NIP_API_BASE_URL || 'https://wl-api.mf.gov.pl',
