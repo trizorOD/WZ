@@ -74,6 +74,7 @@ void main() {
               'address': 'ul. Ręczna 5, Warszawa',
             }),
             201,
+            headers: {'content-type': 'application/json; charset=utf-8'},
           );
         }),
         tokenStorage: FakeTokenStorage('token'),
